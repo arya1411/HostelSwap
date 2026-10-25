@@ -1,0 +1,19 @@
+{
+  "name": "hostelswap",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A campus marketplace for buying and selling pre-loved essentials.",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "setup": "npm ci --prefix backend && npm ci --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "test": "npm test --prefix backend",
+    "test:e2e": "npm run test:e2e --prefix frontend",
+    "check": "npm test && npm run build",
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  }
+}

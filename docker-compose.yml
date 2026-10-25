@@ -1,0 +1,53 @@
+name: hostelswap
+services:
+  database:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-hostelswap}
+      POSTGRES_USER: ${POSTGRES_USER:-hostelswap}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-classroom-db-change-me}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    networks: [hostelswap]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+  backend:
+    build: ./backend
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      TRUST_PROXY: "1"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-hostelswap}:${POSTGRES_PASSWORD:-classroom-db-change-me}@database:5432/${POSTGRES_DB:-hostelswap}
+      JWT_SECRET: ${JWT_SECRET:-classroom-only-replace-this-secret-with-64-random-characters}
+      COLLEGE_EMAIL_DOMAINS: ${COLLEGE_EMAIL_DOMAINS:-college.edu}
+      FRONTEND_ORIGIN: http://localhost:${FRONTEND_PORT:-8080}
+      UPLOAD_DIR: /app/uploads
+      SEED_DEMO: ${SEED_DEMO:-true}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-CampusSwap2026!}
+    volumes:
+      - uploads:/app/uploads
+    networks: [hostelswap]
+    depends_on:
+      database:
+        condition: service_healthy
+    restart: unless-stopped
+  frontend:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8080}:8080"
+    networks: [hostelswap]
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+networks:
+  hostelswap:
+    driver: bridge
+volumes:
+  postgres_data:
+  uploads:
